@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Documentação por Cargo (Dados Originais)</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --success-border: #bbf7d0;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: #0f172a;
+      color: #fff;
+      padding: 20px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .header-title h1 { font-size: 1.25rem; font-weight: 700; }
+    .header-title p { font-size: 0.82rem; color: #94a3b8; }
+
+    .header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
+    .btn-outline:hover { background: rgba(255,255,255,0.16); }
+    .btn-danger-outline { background: transparent; color: #fca5a5; border-color: rgba(252,165,165,0.35); }
+    .btn-danger-outline:hover { background: rgba(220,38,38,0.2); }
+
+    .container {
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 20px 50px;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+    }
+    .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-value { font-size: 1.8rem; font-weight: 800; margin-top: 4px; }
+    .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .stat-danger .stat-value { color: var(--danger); }
+    .stat-success .stat-value { color: var(--success); }
+
+    /* Search & Filter Bar */
+    .search-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .search-bar input {
+      flex: 2;
+      min-width: 240px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .search-bar select {
+      flex: 1;
+      min-width: 180px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.92rem;
+      background: #fff;
+    }
+    .search-bar input:focus, .search-bar select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2,132,199,0.12);
+    }
+
+    /* Cargos Tabs Navigation */
+    .cargos-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+    .cargo-tab {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.15s;
+    }
+    .cargo-tab:hover { border-color: var(--primary); color: var(--primary); }
+    .cargo-tab.active {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+    .cargo-tab span {
+      background: rgba(0,0,0,0.08);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 0.74rem;
+      margin-left: 5px;
+    }
+    .cargo-tab.active span { background: rgba(255,255,255,0.22); color: #fff; }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-title { font-size: 1.2rem; font-weight: 800; color: #0f172a; }
+    .section-count { font-size: 0.88rem; color: var(--muted); font-weight: 600; }
+
+    /* Employee List */
+    .employee-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .emp-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+    }
+    .emp-card.has-pendency { border-left-color: var(--danger); }
+    .emp-card.all-ok { border-left-color: var(--success); }
+
+    .emp-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .emp-name { font-size: 1.05rem; font-weight: 700; color: #0f172a; }
+    .badge-status {
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .badge-status.pendente { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+    .badge-status.aprovado { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+
+    .btn-complete-all {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+      padding: 5px 10px;
+      font-size: 0.76rem;
+    }
+    .btn-complete-all:hover { background: #dcfce7; }
+
+    /* Docs Grid */
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+      gap: 8px;
+    }
+    .doc-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .doc-item.doc-pendente {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: #991b1b;
+    }
+    .doc-item.doc-pendente:hover { background: #fee2e2; }
+    .doc-item.doc-ok {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: #166534;
+    }
+    .doc-item.doc-ok:hover { background: #dcfce7; }
+    .doc-item.doc-na {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: default;
+    }
+
+    .doc-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .doc-left input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--success);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .doc-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+    .doc-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .tag-pend { background: #fecaca; color: #991b1b; }
+    .tag-ok { background: #bbf7d0; color: #166534; }
+    .tag-na { background: #e2e8f0; color: #64748b; }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0f172a;
+      color: #fff;
+      padding: 11px 16px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>Controle de Documentação por Cargo</h1>
+      <p>Base fiel da planilha: itens com traço (-) estão marcados como ENTREGUE. Clique para alterar.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" onclick="exportCSV()">Exportar Planilha (CSV)</button>
+      <button class="btn-danger-outline" onclick="resetData()">Restaurar Original</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Pesquisar funcionário por nome em qualquer cargo..." oninput="renderList()" />
+    <select id="statusFilter" onchange="renderList()">
+      <option value="TODOS">Todos do Cargo</option>
+      <option value="PENDENTES">Apenas com Pendências</option>
+      <option value="ENTREGUES">Tudo Entregue / OK</option>
+    </select>
+  </div>
+
+  <div class="cargos-nav" id="cargosNav"></div>
+
+  <div class="section-header">
+    <div class="section-title" id="sectionTitle">Cargo</div>
+    <div class="section-count" id="sectionCount">0 funcionários</div>
+  </div>
+
+  <div class="employee-list" id="employeeList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = "controle_docs_fiel_v3";
+
+const DOC_DEFS = [
+  { key: "rg_cnh", label: "RG ou CNH" },
+  { key: "cpf", label: "CPF" },
+  { key: "titulo", label: "Título de Eleitor" },
+  { key: "reservista", label: "Cert. Reservista" },
+  { key: "certidao", label: "Certidão Nasc./Cas." },
+  { key: "residencia", label: "Comp. Residência" },
+  { key: "banco", label: "Conta Bancária (CEF)" },
+  { key: "ctps", label: "Carteira de Trabalho" },
+  { key: "pis", label: "PIS/PASEP ou NIT" },
+  { key: "escolaridade", label: "Escolaridade" },
+  { key: "conselho", label: "Conselho Profissional" },
+  { key: "foto", label: "Foto 3x4" }
+];
+
+const CARGOS = ["ADM", "AGNT PORT", "ALMOXARIFADO", "AUX. FARMÁCIA", "BIOMÉDICO", "COOPEIRA", "COORDENADOR", "ENFERMEIRO", "FARMACEUTICO", "MAQUEIRO", "MOTORISTA", "MÉDICO", "NUTRICIONISTA", "ODONTO", "RECPÇÃO", "T.I", "TEC. ENF", "TEC. IMOB", "TEC. LAB", "TEC. RAD"];
+
+// 1 = Entregue / Ok (inclui "-"), 2 = Pendente, 3 = Não se aplica
+const RAW_ROWS = [
+  [1, "MATHEUS LAURINDO FERREIRA", 0, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [2, "JOAO VICTOR OLIVEIRA ACIOLE MARTINS", 0, [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 3, 1]],
+  [3, "LETICIA GABRIELLE OLIVEIRA DA SILVA", 0, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [4, "CICERA MARIA SOUZA", 0, [1, 1, 1, 3, 1, 1, 2, 1, 2, 1, 3, 1]],
+  [5, "AMANDA ALBUQUERQUE DA SILVA", 0, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [6, "ANNE CAROLLINE GOMES BERNARDO", 0, [1, 1, 1, 3, 2, 1, 1, 1, 1, 1, 3, 1]],
+  [7, "ISAAC ROTANDARO DOS SANTOS", 0, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [8, "CICERO SOARES CAVALCANTE", 1, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [9, "CLAUDIO PEREIRA DA SILVA NETO", 1, [2, 2, 2, 2, 1, 1, 2, 1, 2, 2, 3, 2]],
+  [10, "MANOEL MESSIAS MENEZES DO NASCIMENTO", 1, [1, 1, 1, 2, 2, 1, 2, 1, 2, 2, 3, 2]],
+  [11, "JOCYEL NASCIMENTO DA SILVA", 1, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [12, "JOSE CICERO FERREIRA DA SILVA", 1, [1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 3, 2]],
+  [13, "RANDSON FERNANDO SILVA DOS SANTO", 1, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [14, "CRISTIANO SANTANA DOS SANTOS", 1, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 1]],
+  [15, "CHARLES HENRIQUE BERNARDO LAMARCK", 1, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2]],
+  [16, "LEANDERSON CAVALCANTE DOS SANTOS", 1, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2]],
+  [17, "WELLINGTON DOS SANTOS CRISOSTOMO", 2, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [18, "ADILSON BARRETO DE MELO NETO", 3, [1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 3, 1]],
+  [19, "MARIA THAIS ALVES CALHEIROS", 3, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [20, "ANA NERI FERREIRA DE LIMA", 3, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [21, "BEATRIZ LIMA MELO", 3, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [22, "WILMA BERVANY MELO SOARES", 3, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [23, "JAQUELINE NASCIMENTO SIMIAO", 3, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [24, "JULIANA VIEIRA BUIQUE MELO", 3, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [25, "WELLINGTON VINICIUS DE FRANCA GOMES", 3, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [26, "MAYNE ODILON DA SILVA SANTOS OLIVEIRA", 4, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 2, 1]],
+  [27, "CICERO JOSE DA SILVA NETO", 4, [1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [28, "LARA MILLENA DE LIMA ALVES", 4, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [29, "JANAINA ITAPUANA MARQUES WANDERLEY", 4, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [30, "ADELONIA OLIVEIRA DE LIMA", 4, [1, 1, 1, 3, 1, 1, 1, 2, 2, 1, 1, 1]],
+  [31, "CHARLINE DE SOUZA CAVALCANTE", 4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [32, "VITORIA DEODATO DA SILVA", 4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [33, "MARIA DA CONCEICAO DA SILVA LIMA", 5, [1, 1, 1, 3, 1, 1, 1, 2, 1, 2, 3, 2]],
+  [34, "DIONETE DA SILVA PEREIRA FERREIRA", 5, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [35, "ANA CATARINA SANTOS DE ANDRADE", 5, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [36, "MARIA JOSE JOAQUIM DA SILVA", 5, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [37, "LEILA CRISTINA DA SILVA ROCHA", 6, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [38, "RAYSSA COSTA CORREIA", 7, [1, 1, 2, 3, 1, 2, 1, 1, 1, 1, 2, 1]],
+  [39, "MIRIAN PATRICIA DE FRANCA OLIVEIRA", 7, [2, 2, 2, 3, 1, 1, 2, 1, 1, 1, 2, 1]],
+  [40, "POLIANE DE OLIVEIRA DE ALBUQUERQUE", 7, [1, 1, 1, 3, 1, 1, 2, 1, 2, 1, 1, 2]],
+  [41, "ESTHEFANY VIRTUOSO DOS SANTOS", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [42, "VICTORIA CRHISSYE CERQUEIRA ACIOLI", 7, [1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [43, "NICOLLE MILLON MONTEIRO DE LIMA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [44, "MANUELA BERNARDO DOS SANTOS SOUZA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 2]],
+  [45, "LARISSA SUZANA DE MEDEIROS SILVA", 7, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 1, 2]],
+  [46, "RONDINELE SILVINO SILVA DOS SANTOS", 7, [1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [47, "WEDNA DE SOUZA ARAUJO", 7, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [48, "GEOVANNA SOARES DA SILVA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [49, "YARANDI MACEDO DOS SANTOS", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [50, "MARIA JOSE DA SILVA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [51, "MILENA MARIA MACEDO MAIA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [52, "FABIANE BEZERRA DA SILVA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [53, "LEIDIANE TEIXEIRA DA SILVA AUGUSTINHO", 7, [1, 1, 1, 3, 2, 1, 1, 1, 1, 2, 1, 1]],
+  [54, "NATHASHA WESLLEYN ROSA DA SILVA", 7, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 1, 1]],
+  [55, "LIVIA DA SILVA ALVES SOUSA", 7, [1, 1, 2, 3, 1, 2, 2, 2, 2, 1, 1, 1]],
+  [56, "TAMARA RAFAELA DE SOUZA ALVES", 7, [1, 1, 1, 3, 2, 1, 1, 1, 1, 2, 1, 1]],
+  [57, "YASMIN TAVARES PEREIRA DE ALMEIDA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [58, "ALEX DEVYSON SAMPAIO FERRO MOREIRA", 7, [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1]],
+  [59, "JOANA EUNICE SANTOS", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [60, "FLAVIANNE CONCEICAO OLIVEIRA DOS SANTOS", 7, [1, 1, 1, 3, 1, 1, 2, 2, 2, 1, 1, 1]],
+  [61, "ROMULO ARTHUR LAMENHA XAVIER", 7, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [62, "LETICIA OLIVEIRA DOS SANTOS", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 2, 1, 1]],
+  [63, "MELRYLANIA CLISSIA RAMOS DA SILVA FIRMINO", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [64, "DAISE CALISTO DA SILVA SANTOS", 7, [1, 1, 1, 3, 1, 1, 2, 2, 2, 1, 1, 1]],
+  [65, "AMANDA TACIANA MENDES DE MELO", 7, [1, 1, 1, 3, 2, 1, 1, 1, 2, 2, 1, 1]],
+  [66, "ELAINE GUEDES DA SILVA SANTOS", 7, [1, 1, 1, 3, 2, 1, 2, 2, 2, 2, 1, 1]],
+  [67, "DAIANE BARBOSA DA SILVA", 7, [1, 1, 1, 3, 1, 1, 1, 1, 1, 2, 1, 1]],
+  [68, "ERIKSSON GABRIEL FERNANDES XAVIER", 7, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [69, "ADERLANDA PEREIRA DOS SANTOS", 7, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [70, "ANA CLAUDIA ROCHA COSTA", 7, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [71, "BIANCA MARIA BRITO LOPES DA SILVA", 7, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [72, "CARLA DE ARAUJO SILVA", 7, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [73, "ELIZIVANIA NUNES DE FARIAS", 7, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [74, "GLAUCIA DHAYSE ALVES DA SILVA", 7, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [75, "LARISSA MARIA FARIAS DE ALMEIDA", 7, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [76, "FLORIANA SANTOS DUARTE", 8, [1, 1, 1, 3, 1, 1, 2, 2, 2, 1, 1, 1]],
+  [77, "DRIANA KARLA MOURA DO NASCIMENTO", 8, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [78, "ARTHUR LUY TAVARES FERREIRA BORGES", 8, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [79, "CALLINE CRISTINA SANTOS SOUZA", 8, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [80, "CAROLINE AMANCIO DA SILVA", 8, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [81, "FLORIANA SANTOS DUARTE", 8, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [82, "KELLYANA CORREIA DE SOUZA", 8, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [83, "JHECKSON DOUGLAS DOS SANTOS PEIXOTO", 9, [1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 3, 2]],
+  [84, "ANDRE GOMES DE LIMA", 9, [1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 3, 2]],
+  [85, "ISMAR CAMPELO DE OLIVEIRA", 9, [1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 2]],
+  [86, "JOHNATAN JOSE DE ANDRADE GOMES DA SILVA", 9, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [87, "VICTOR MANOEL TEIXEIRA DE HOLANDA MENDONCA", 11, [1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 2, 2]],
+  [88, "MATHEUS AMORIM MEIRA", 11, [1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 2]],
+  [89, "MUCIO LINS CAVALCANTI", 11, [1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2]],
+  [90, "BRUNO DE MEDEIROS CHAVES SOUZA AZEVEDO", 11, [1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2]],
+  [91, "AMANDA CAVALCANTI LITRENTA", 11, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [92, "KAMILA KESSIA PEREIRA FERNANDES", 11, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 2]],
+  [93, "LARISSA DANTAS LUZ", 11, [1, 1, 1, 3, 2, 1, 1, 1, 2, 1, 1, 2]],
+  [94, "WANESSA SANTOS MARINHO", 11, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [95, "EVERTON CAMILO FERREIRA NERYS", 11, [1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 1, 1]],
+  [96, "LAVINIA LESSA DE BRITO LAMENHA", 11, [1, 1, 1, 3, 1, 1, 1, 2, 2, 1, 1, 1]],
+  [97, "LETICIA BARROS CARDOSO", 11, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [98, "MARIA TEREZA", 11, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [99, "JOSE JACKSON DA SILVA LUCENA SANTANA", 11, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [100, "CAMILA MARIA TENORIO DE MELO PEIXOTO", 11, [1, 1, 1, 3, 1, 1, 1, 2, 2, 1, 1, 1]],
+  [101, "NATHALIA ANDRADE DA CRUZ MACENA", 11, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [102, "BRUNNA FIGUEREDO DE OLIVEIRA SILVA", 11, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [103, "NICKSSON ALEXANDRE FELIX DE OLIVEIRA", 11, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [104, "MARIA EDUARDA DA SILVA CURSINO", 11, [1, 1, 2, 3, 1, 1, 2, 2, 2, 1, 1, 1]],
+  [105, "ANA LAURA ARAUJO VALENCA DE OLIVEIRA", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [106, "ANTONIO LAMENHA MOTTA MEDEIROS", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [107, "ANTONNIA CORREIA VIDAL VITALINO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [108, "DARAH YASMIM MOREIRA ALVES", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [109, "DIOGO PITOMBEIRA BRAGA", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [110, "FELYPE MACHADO DA SILVA", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [111, "GABRIEL MARQUES DA SILVA", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [112, "GILVAN TENORIO SILVEIRA NETO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [113, "GUILHERME DE SOUSA LOPES", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [114, "HELION LISBOA DE SA NETO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [115, "ISADORA THAMYRES BARBOSA FERREIRA DUTRA", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [116, "JOSE MAIA COSTA NETO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [117, "JULIA MARIA GOMES DE MENDOCA VASCONCELOS", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [118, "LARA ANTUNES MARTINS MACEDO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [119, "LUIS GUILHERME GOMES DE ATHAYDE", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [120, "MARIA CLARA DOS SANTOS CANDIDO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [121, "MARIA TEREZA MUNIZ GUERRA", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [122, "MARIA VICTORIA DE MORAIS BORN RIBEIRO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [123, "MARION DE ALMEIDA CAVALCANTE MELO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [124, "NATHANNE YASMIN OLIVEIRA TORRES", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [125, "PEDRO NOGUEIRA DE ANDRADE", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [126, "RUAN CABRAL DE ALMEIDA ANDRADE", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [127, "THAISSA REIS ROCHA", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [128, "VINICIUS TENORIO BRAGA CAVALCANTE PINTO", 11, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [129, "ALEXANDRE AUGUSTO TENORIO DA SILVA", 10, [1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 2]],
+  [130, "JOSE LOURENCO DA SILVA NETO", 10, [1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 3, 1]],
+  [131, "THAIS ARRUDA DOS SANTOS BARROS", 12, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [132, "LARISSA SANTOS DE MOURA ALCANTARA", 12, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [133, "LIANDRA ANDREZA DE OLIVEIRA", 13, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [134, "ERNANDI RIBEIRO CEZAR DE LIMA", 13, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [135, "ANTONIO CARLOS OLIVEIRA DE ARAUJO", 13, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [136, "ALICE CORREIA CAMILO", 14, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [137, "IZABEL CRISTINA FRANCISCA FERREIRA", 14, [1, 1, 1, 3, 1, 1, 1, 2, 1, 2, 3, 2]],
+  [138, "NATALIA MARIA DA SILVA", 14, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 3, 2]],
+  [139, "MARIA DAS DORES DA CONCEICAO", 14, [1, 1, 1, 3, 1, 1, 1, 2, 2, 1, 3, 1]],
+  [140, "MIRONALDO SANTOS DE ARAUJO", 14, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [141, "GIRLENE DOS SANTOS SILVA", 14, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [142, "RENATA ANSELMO DA SILVA", 14, [1, 1, 1, 3, 1, 1, 2, 1, 2, 1, 3, 1]],
+  [143, "MARIA CRISTINA SILVA ROCHA", 14, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [144, "JESSYCA JACIANE FERNANDES DA SILVA CUNHA", 14, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [145, "RAYSSA GABRIELA ALVES JUCA NOGUEIRA", 14, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [146, "JOYCE MYRIA DA CONCEICAO SANTOS", 14, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [147, "LIVIA FORTUNATO SILVA", 14, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [148, "MARIA ROSIMEIRE TEIXEIRA DOS SANTOS", 14, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [149, "SANELY ARAUJO DA SILVA", 14, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [150, "PEDRO OLIVEIRA LOPES", 15, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1]],
+  [151, "MISLEM GONCALVES DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 2, 1]],
+  [152, "ERICA DA SILVA NASCIMENTO", 16, [1, 1, 2, 3, 1, 1, 2, 2, 2, 2, 2, 1]],
+  [153, "MARIVANIA SILVA DOS SANTOS", 16, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 2, 1]],
+  [154, "ANA PATRICIAEUZEBIO MAGALHAES", 16, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 1, 1]],
+  [155, "ROSANGELA ROCHA DE CARVALHO", 16, [1, 1, 1, 3, 2, 1, 2, 2, 2, 2, 1, 2]],
+  [156, "ALICIA MARIA FERREIRA ROCHA", 16, [1, 1, 1, 3, 2, 1, 2, 1, 2, 1, 1, 2]],
+  [157, "MARIA EDNEIDE DA SILVA MARQUES", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 2]],
+  [158, "DEVERLANE MARIA OLIVARES DO NASCIMENTO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 2]],
+  [159, "MARCIELE FERREIRA DE OLIVEIRA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [160, "ROSANGELA MARIA DANTAS FERREIRA", 16, [1, 1, 1, 3, 1, 1, 1, 2, 2, 1, 1, 2]],
+  [161, "MARIA JANAINA SANTOS DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 2]],
+  [162, "MARIA LORENNY RODRIGUES CRISOSTOMO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [163, "MYRIAN DA SILVA SANTOS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [164, "JULIANA ALICE GONCALVES DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [165, "JANAINA AGRIPINA DE FREITAS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [166, "ERIKA DOS SANTOS HERCULANO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [167, "LIDIANE CARDOSO DE ALMEIDA", 16, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 1, 2]],
+  [168, "TAYNAR SAMYRA DE SOUZA MELO SILVA", 16, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 1, 2]],
+  [169, "SARA ELIZABETE DOS SANTOS", 16, [1, 1, 1, 3, 2, 1, 1, 1, 1, 1, 1, 2]],
+  [170, "PATRICIA DOMINGOS DE LIMA", 16, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 1, 2]],
+  [171, "MARCOS ALMEIDA DA SILVA", 16, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [172, "NIVEA LUIZA DE ARAUJO TENORIO", 16, [1, 1, 1, 3, 1, 2, 1, 1, 1, 1, 1, 2]],
+  [173, "NADJA GALDINO DA SILVA", 16, [1, 1, 1, 3, 1, 1, 2, 1, 2, 2, 1, 2]],
+  [174, "MARIA GLAUDISMARA LUCIANA MARTINS SANTOS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 2, 1, 2]],
+  [175, "ELIZANGELA GOMES DA SILVA VIEIRA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 2]],
+  [176, "MARIA HYSLENNE SANTOS CAVALCANTE", 16, [2, 2, 1, 3, 2, 2, 2, 1, 2, 1, 1, 2]],
+  [177, "DEBORA ROBERTA GOMES DE ARAUJO FARIAS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [178, "VICTOR RAFAEL DA CONCEICAO", 16, [1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1]],
+  [179, "STHEFANY MIKAELE FERREIRA DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [180, "LAUANA SUELLY CALHEIROS LOPES", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [181, "KARINA FARIAS DE OLIVEIRA", 16, [1, 1, 1, 3, 1, 1, 1, 2, 2, 1, 1, 1]],
+  [182, "THAYSE TAYNA MATIAS DO NASCIMENTO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [183, "TACIANA JANE DOS SANTOS LIMA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [184, "ANA CLAUDIA ROCHA COSTA", 16, [1, 1, 1, 3, 2, 2, 2, 2, 2, 1, 1, 1]],
+  [185, "DIANE TORRES DE GOUVEIA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [186, "KARINE KETILLEY VIEIRA DOS SANTOS", 16, [1, 1, 1, 3, 1, 1, 1, 2, 1, 1, 1, 1]],
+  [187, "IRIS WALESCA SILVA DE LIMA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 2, 1, 1]],
+  [188, "THAYANE DOS SANTOS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [189, "SUZANA DE ANDRADE SILVA", 16, [1, 1, 1, 3, 1, 2, 1, 2, 2, 1, 1, 1]],
+  [190, "LAVICI TAINA TELES BARACHO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 2, 1, 1]],
+  [191, "LEIDIANE TEIXEIRA DA SILVA AUGUSTINHO", 16, [1, 1, 1, 3, 2, 1, 1, 2, 2, 2, 1, 1]],
+  [192, "LARISSA MARIA FARIAS DE ALMEIDA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [193, "NATACHA CLEA ALVES LOPES", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [194, "VITORIA JUSTINO BARBOSA DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [195, "CARLA ANDRESSA DA SILVA SOUSA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [196, "BIANCA DE FATIMA OLIVEIRA ARAUJO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [197, "MARIA CICERA DA SILVA SANTOS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [198, "ESMILA DAIANE GONCALVES DA SILVA", 16, [1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 1, 1]],
+  [199, "RITA DE CASSIA LUIZ DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [200, "RUANA WILLYANE COSTA DE MOURA", 16, [1, 1, 1, 3, 1, 1, 1, 2, 2, 1, 1, 1]],
+  [201, "ESTER DE OLIVEIRA SANTOS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [202, "MARIA ALICE SOARES DAMACENO", 16, [1, 1, 1, 3, 2, 2, 2, 1, 1, 1, 1, 1]],
+  [203, "JULIA MAGALHAES SATIRO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 2, 1, 1]],
+  [204, "THAIS ANDRADE DE FREITAS", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [205, "JHENNYFFER LESLIE SOUZA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [206, "RENATA GEOVANA LEODÓRIO DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1]],
+  [207, "CAUANE PAULINO FAUSTINO", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [208, "MARICELIA GOMES DA SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [209, "DAIANA DOS SANTOS SILVA", 16, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [210, "ANA POLLIANA TEOFILO DA SILVA", 16, [2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [211, "EMILLY DA SILVA FERREIRA SANTOS", 16, [2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [212, "MICHELLE TEREZA DE SANTANA SANTOS", 16, [2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [213, "VALDEREZ DOS SANTOS MARTINS", 16, [2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [214, "MAURICIO GOMES DA COSTA", 17, [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 2]],
+  [215, "MIRNA LOI CARVALHO MARQUES DA SILVA", 17, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [216, "MARIA CÉLIA SEVERIANO", 18, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [217, "SAMARA ANDRADE DOS SANTOS", 18, [1, 1, 1, 3, 2, 1, 2, 1, 2, 1, 1, 1]],
+  [218, "EDVANIA SILVA SANTOS", 18, [1, 1, 1, 3, 1, 2, 1, 1, 2, 1, 1, 1]],
+  [219, "BRUNA GRAZIELLA PAIS DA SILVA", 18, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [220, "JEANE DA SILVA DANTAS CABRAL", 18, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [221, "SIMONE DOS SANTOS FREITAS", 18, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]],
+  [222, "IZABELA GRANCONATO RICCIARDI", 19, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [223, "JOSILENE DE SOUZA OLIVEIRA", 19, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [224, "DEBORAH HORTENCIA", 19, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [225, "JOSE FERNANDES DE MELO NETO", 19, [1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 3]],
+  [226, "ADRYAN JUNIOR DE ALMEIDA ALVES", 19, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [227, "NYDIA ALVES SARMENTO", 19, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]],
+  [228, "MARIANA DE SOUZA SILVA TAVARES", 19, [1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1]]
+];
+
+let employees = [];
+let currentCargo = CARGOS[0];
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      employees = JSON.parse(saved);
+      return;
+    } catch(e) {}
+  }
+  employees = RAW_ROWS.map(r => ({
+    id: r[0],
+    nome: r[1],
+    cargo: CARGOS[r[2]],
+    docs: [...r[3]]
+  }));
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
+}
+
+function initUI() {
+  const nav = document.getElementById("cargosNav");
+  nav.innerHTML = CARGOS.map(c => {
+    const empsCargo = employees.filter(e => e.cargo === c);
+    const pendEmps = empsCargo.filter(e => e.docs.includes(2)).length;
+    return `<button class="cargo-tab ${c === currentCargo ? 'active' : ''}" onclick="selectCargo('${c}')">${c} <span>${empsCargo.length} (${pendEmps} pend.)</span></button>`;
+  }).join("");
+}
+
+function selectCargo(cargo) {
+  currentCargo = cargo;
+  document.getElementById("searchInput").value = "";
+  initUI();
+  renderList();
+}
+
+function toggleDoc(empId, docIndex) {
+  const emp = employees.find(e => e.id === empId);
+  if (!emp) return;
+  const current = emp.docs[docIndex];
+  if (current === 3) return;
+
+  emp.docs[docIndex] = current === 2 ? 1 : 2;
+  saveState();
+  initUI();
+  renderStats();
+  renderList();
+  showToast(`Documento atualizado para ${emp.nome}`);
+}
+
+function completeAllPending(empId) {
+  const emp = employees.find(e => e.id === empId);
+  if (!emp) return;
+  let changed = 0;
+  emp.docs = emp.docs.map(st => {
+    if (st === 2) { changed++; return 1; }
+    return st;
+  });
+  if (changed > 0) {
+    saveState();
+    initUI();
+    renderStats();
+    renderList();
+    showToast(`Todas as pendências de ${emp.nome} foram entregues!`);
+  }
+}
+
+function renderStats() {
+  let totalEmp = employees.length;
+  let empComPendencia = 0;
+  let totalDocsPendentes = 0;
+
+  employees.forEach(e => {
+    if (e.docs.includes(2)) empComPendencia++;
+    e.docs.forEach(d => { if (d === 2) totalDocsPendentes++; });
+  });
+
+  document.getElementById("statsGrid").innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total de Funcionários</div>
+      <div class="stat-value">${totalEmp}</div>
+      <div class="stat-sub">100% extraídos da planilha</div>
+    </div>
+    <div class="stat-card stat-danger">
+      <div class="stat-label">Funcionários com Pendência</div>
+      <div class="stat-value">${empComPendencia}</div>
+      <div class="stat-sub">De ${totalEmp} colaboradores</div>
+    </div>
+    <div class="stat-card stat-danger">
+      <div class="stat-label">Documentos Pendentes</div>
+      <div class="stat-value">${totalDocsPendentes}</div>
+      <div class="stat-sub">Itens faltantes no total</div>
+    </div>
+    <div class="stat-card stat-success">
+      <div class="stat-label">Documentação Completa</div>
+      <div class="stat-value">${totalEmp - empComPendencia}</div>
+      <div class="stat-sub">Sem nenhuma pendência</div>
+    </div>
+  `;
+}
+
+function renderList() {
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+  const statusFilter = document.getElementById("statusFilter").value;
+
+  let list = employees;
+  if (query) {
+    list = employees.filter(e => e.nome.toLowerCase().includes(query));
+    document.getElementById("sectionTitle").textContent = `Busca Global: "${query.toUpperCase()}"`;
+  } else {
+    list = employees.filter(e => e.cargo === currentCargo);
+    document.getElementById("sectionTitle").textContent = `Cargo: ${currentCargo}`;
+  }
+
+  if (statusFilter === "PENDENTES") {
+    list = list.filter(e => e.docs.includes(2));
+  } else if (statusFilter === "ENTREGUES") {
+    list = list.filter(e => !e.docs.includes(2));
+  }
+
+  document.getElementById("sectionCount").textContent = `${list.length} funcionário(s) exibido(s)`;
+
+  const listEl = document.getElementById("employeeList");
+  if (list.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center;padding:40px;color:#64748b;background:#fff;border-radius:10px;border:1px solid var(--border);">Nenhum funcionário encontrado neste filtro.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = list.map(emp => {
+    const pendCount = emp.docs.filter(d => d === 2).length;
+    const cardClass = pendCount > 0 ? "has-pendency" : "all-ok";
+    const badge = pendCount > 0
+      ? `<span class="badge-status pendente">${pendCount} PENDENTE${pendCount > 1 ? 'S' : ''}</span>`
+      : `<span class="badge-status aprovado">TUDO ENTREGUE / OK</span>`;
+
+    const docsHtml = emp.docs.map((val, idx) => {
+      let cls = "doc-ok";
+      let tag = `<span class="doc-tag tag-ok">ENTREGUE</span>`;
+      let checked = "checked";
+      let disabled = "";
+
+      if (val === 2) {
+        cls = "doc-pendente";
+        tag = `<span class="doc-tag tag-pend">PENDENTE</span>`;
+        checked = "";
+      } else if (val === 3) {
+        cls = "doc-na";
+        tag = `<span class="doc-tag tag-na">N/A</span>`;
+        checked = "";
+        disabled = "disabled";
+      }
+
+      const clickAttr = val === 3 ? "" : `onclick="toggleDoc(${emp.id}, ${idx})"`;
+
+      return `
+        <div class="doc-item ${cls}" ${clickAttr}>
+          <div class="doc-left">
+            <input type="checkbox" ${checked} ${disabled} onclick="event.stopPropagation(); toggleDoc(${emp.id}, ${idx})" />
+            <span class="doc-name">${DOC_DEFS[idx].label}</span>
+          </div>
+          ${tag}
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="emp-card ${cardClass}">
+        <div class="emp-header">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span class="emp-name">${emp.nome}</span>
+            <span style="font-size:0.75rem;background:#e2e8f0;padding:2px 8px;border-radius:4px;font-weight:700;color:#334155;">${emp.cargo}</span>
+            ${badge}
+          </div>
+          <div>
+            ${pendCount > 0 ? `<button class="btn-complete-all" onclick="completeAllPending(${emp.id})">✓ Entregar todas as pendências</button>` : ""}
+          </div>
+        </div>
+        <div class="docs-grid">${docsHtml}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function exportCSV() {
+  const statusText = ["", "Ok/Entregue", "Pendente", "Não se aplica"];
+  const headers = ["NOME", "CARGO", ...DOC_DEFS.map(d => d.label)];
+  const rows = [headers.join(";")];
+
+  employees.forEach(emp => {
+    const line = [
+      `"${emp.nome}"`,
+      `"${emp.cargo}"`,
+      ...emp.docs.map(d => `"${statusText[d]}"`)
+    ];
+    rows.push(line.join(";"));
+  });
+
+  const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `documentos_por_cargo_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Planilha CSV exportada com sucesso!");
+}
+
+function resetData() {
+  if (!confirm("Deseja restaurar todos os dados originais da planilha?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  loadState();
+  initUI();
+  renderStats();
+  renderList();
+  showToast("Dados originais restaurados.");
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+loadState();
+initUI();
+renderStats();
+renderList();
+</script>
+</body>
+</html>
